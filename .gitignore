@@ -1,0 +1,9 @@
+# Secretos — nunca subir
+.env
+.env.local
+.env.*.local
+
+# Logs y temporales
+*.log
+tmp/
+.DS_Store
