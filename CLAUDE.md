@@ -70,11 +70,37 @@ caigo automáticamente a **API v2** con los mismos credenciales.
   antes de ejecutarlas, en formato "oneshot".
 - Las lecturas (buscar/listar/consultar) se ejecutan directamente.
 
+## Flujos registrados
+
+### Flujo: Confirmación de cita → captura de paciente
+Objetivo: confirmar una cita a un lead y, cuando responda, capturarlo como
+**paciente** con la cita confirmada.
+
+**Paso 1 — Confirmar (contacto entra como LEAD):** `flows/confirmar-cita.sh`
+1. Upsert del contacto (nombre, teléfono, email) con tags `lead` +
+   `cita-pendiente-confirmacion`.
+2. Envía SMS confirmando fecha/hora, pidiendo responder **SÍ** y su **fecha de
+   nacimiento**.
+- Email: si no lo dio, usar placeholder con dominio reservado `.invalid`
+  (p. ej. `nombre.apellido@placeholder.invalid`) para no enviar correo a un
+  buzón real ajeno. Se reemplaza cuando dé el real.
+
+**Paso 2 — Capturar como PACIENTE (tras su respuesta):** `flows/confirmar-paciente.sh <contactId> <AAAA-MM-DD>`
+1. Guarda la fecha de nacimiento (`dateOfBirth`).
+2. Agrega tags `paciente` + `cita-confirmada`.
+3. Quita tags `lead` + `cita-pendiente-confirmacion`.
+
+Regla: el Paso 2 se ejecuta **solo** cuando el contacto ya respondió confirmando.
+Vía MCP se hace con las tools de contactos/conversaciones; los scripts usan la
+API v2 como fallback ejecutable.
+
 ## Archivos del proyecto
 - `.mcp.json` — configuración del servidor MCP `gohighlevel` (sin secretos).
 - `.env` — token real + locationId (**no se sube a git**).
 - `.env.example` — plantilla sin secretos.
 - `.gitignore` — protege `.env`.
+- `flows/confirmar-cita.sh` — Paso 1 del flujo de confirmación de cita.
+- `flows/confirmar-paciente.sh` — Paso 2: captura como paciente.
 
 ## Notas de entorno
 - El servidor MCP y la API requieren salida a `services.leadconnectorhq.com`.
